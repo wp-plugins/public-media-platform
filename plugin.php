@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: WordPress PMP
+ * Plugin Name: Public Media Platform
  * Plugin URI: https://github.com/publicmediaplatform/pmp-wordpress
- * Description: Integrate PMP.io with WordPress
- * Author: Ryan Nagle (Investigative News Network)
- * Version: 0.1
- * Author URI: http://nerds.investigativenewsnetwork.org/
+ * Description: Integrate your site's content with the <a href="https://support.pmp.io" target="_blank">Public Media Platform</a>.
+ * Author: the PMP and INN nerds
+ * Version: latest
+ * Author URI: https://github.com/publicmediaplatform/pmp-wordpress
  * License: MIT
  */
 
