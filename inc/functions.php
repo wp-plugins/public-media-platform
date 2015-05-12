@@ -119,6 +119,43 @@ function pmp_on_post_status_transition($new_status, $old_status, $post) {
 add_action('transition_post_status',  'pmp_on_post_status_transition', 10, 3 );
 
 /**
+ * Add a "PMP Pushed" date to the meta actions box.
+ *
+ * @since 0.2
+ */
+function pmp_last_modified_meta() {
+	global $post;
+
+	// Only show meta if this post came from the PMP
+	$pmp_guid = get_post_meta($post->ID, 'pmp_guid', true);
+	$pmp_mod = get_post_meta($post->ID, 'pmp_modified', true);
+	if (empty($pmp_guid)) return;
+
+	// Link to the PMP support searcher (for now)
+	$options = get_option('pmp_settings');
+	if ($options && $options['pmp_api_url'] && strpos($options['pmp_api_url'], 'sandbox')) {
+		$pmp_link = 'https://support.pmp.io/sandboxsearch?text=guid%3A' . $pmp_guid;
+	}
+	else {
+		$pmp_link = 'https://support.pmp.io/search?text=guid%3A' . $pmp_guid;
+	}
+
+	// Format similar to WP's published date
+	$pmp_local = get_date_from_gmt(date('Y-m-d H:i:s', strtotime($pmp_mod)), 'M n, Y @ G:i');
+?>
+  <div id="pmp-publish-meta">
+		<div class="misc-pub-section curtime">
+			<span id="timestamp">PMP guid: <b><a target="_blank" href="<?php echo $pmp_link; ?>"><?php echo substr($pmp_guid, 0, 8); ?><span class="ext-link dashicons dashicons-external"></span></a></b></span>
+		</div>
+		<div class="misc-pub-section curtime">
+			<span id="timestamp">PMP modified: <b><?php echo $pmp_local; ?></b></span>
+		</div>
+	</div>
+<?php
+}
+add_action('post_submitbox_misc_actions', 'pmp_last_modified_meta');
+
+/**
  * Add a "Publish and push to PMP" button the post publish actions meta box.
  *
  * @since 0.2
@@ -126,46 +163,44 @@ add_action('transition_post_status',  'pmp_on_post_status_transition', 10, 3 );
 function pmp_publish_and_push_to_pmp_button() {
 	global $post;
 
-	if (!pmp_post_is_mine($post->ID))
-		return;
+	// Check if post is in the PMP, and if it's mine
+	$pmp_guid = get_post_meta($post->ID, 'pmp_guid', true);
+	$pmp_mine = pmp_post_is_mine($post->ID);
+	if ($pmp_guid && !$pmp_mine) return;
 
-	$message = ($post->post_status == 'publish')? 'Update' : 'Publish';
+	// Base display/disabled on post status
+	$is_disabled = ($post->post_status != 'publish');
+	if ($is_disabled) {
+		$helper_text = 'You must publish first!';
+	}
+	else if (!$pmp_guid) {
+		$helper_text = 'Not in PMP';
+	}
+	else {
+		$helper_text = 'Post will be updated';
+	}
 ?>
 	<div id="pmp-publish-actions">
-		<input type="submit"
-			name="pmp_<?php echo strtolower($message); ?>_push"
-			id="pmp-<?php echo strtolower($message); ?>-push"
-			class="button button-primary button-large" value="<?php echo $message; ?> and push to PMP">
+		<p class="helper-text"><?php echo $helper_text; ?></p>
+		<input type="submit" name="pmp_update_push" id="pmp-update-push"
+			<?php if ($is_disabled) echo 'disabled'; ?>
+			class="button button-pmp button-large" value="Push to PMP">
 	</div>
 <?php
 }
 add_action('post_submitbox_start', 'pmp_publish_and_push_to_pmp_button');
 
 /**
- * Push content to PMP when user clicks "Publish and push to PMP" or "Update and push to PMP"
+ * Push content to PMP when user clicks "Push to PMP"
  *
  * @since 0.2
  */
 function pmp_push_to_pmp($post_id) {
-	if (isset($_POST['pmp_publish_push']))
-		$action = 'publish';
-	else if (isset($_POST['pmp_update_push']))
-		$action = 'update';
-
-	if (!empty($action)) {
-		if (wp_is_post_revision($post_id))
-			return;
-
-		$post = get_post($post_id);
-		if ($action == 'publish' && $post->post_status != 'publish') {
-			wp_publish_post($post_id);
-			return;
-		}
-
+	if (isset($_POST['pmp_update_push']) && !wp_is_post_revision($post_id)) {
 		return pmp_handle_push($post_id);
 	}
 }
-add_action('save_post', 'pmp_push_to_pmp');
+add_action('save_post', 'pmp_push_to_pmp', 11);
 
 /**
  * Handle pushing post content to PMP. Works with posts and attachments (images).
@@ -263,9 +298,9 @@ function pmp_handle_push($post_id) {
 	if (!in_array('wp_pmp_push', $doc->attributes->itags))
 		$doc->attributes->itags = array_merge($doc->attributes->itags, array('wp_pmp_push'));
 
-	do_action('pmp_before_push', $post->ID);
+	$doc = apply_filters('pmp_before_push', $doc, $post->ID);
 	$doc->save();
-	do_action('pmp_after_push', $post->ID);
+	do_action('pmp_after_push', $doc, $post->ID);
 
 	$post_meta = pmp_get_post_meta_from_pmp_doc($doc);
 

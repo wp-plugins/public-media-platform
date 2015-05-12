@@ -54,8 +54,9 @@ function pmp_plugin_menu() {
 	$capability = 'edit_posts';
 	$menu_slug = 'pmp-search';
 	$function = 'pmp_search_page';
+	$icon_url = 'dashicons-networking';
 
-	add_menu_page($page_title, $menu_title, $capability, $menu_slug, $function);
+	add_menu_page($page_title, $menu_title, $capability, $menu_slug, $function, $icon_url);
 
 	$sub_menus = array(
 		array(

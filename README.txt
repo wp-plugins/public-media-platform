@@ -15,6 +15,8 @@ The [Public Media Platform](http://publicmediaplatform.org) is a cross-media dis
 
 The PMP was founded by a collaboration of APM, NPR, PBS, PRI and PRX, with the goal of bringing public media content to a wider audience.  It contains more than 300K pieces of digital content from our founding partners, and is growing every day.  For more information on what's available, feel free to [search the PMP](https://support.pmp.io/search?profile=story&has=image).
 
+Built by the [INN Nerds](http://nerds.inn.org/).
+
 = Current plugin features: =
 
 * **Search** Find available content via filters and full-text search
@@ -51,6 +53,11 @@ For information on the PMP in general, head to [support.pmp.io](https://support.
 See the [documentation on Github](https://github.com/publicmediaplatform/pmp-wordpress).
 
 == Changelog ==
+
+= 0.2.3 =
+
+- Better styling on the edit post page
+- Fix hook priority conflicts with other plugins
 
 = 0.2.2 =
 

@@ -351,9 +351,36 @@ p.error {
 }
 
 /* Post editor styles */
+#pmp-publish-meta .ext-link {
+  font-size: 18px;
+  text-decoration: none;
+}
+#pmp-publish-meta #timestamp:before {
+  content: '\f325';
+}
 #pmp-publish-actions {
-  margin: 10px 0;
+  margin: 2px 0 10px 0;
   padding: 0 0 12px 0;
   border-bottom: 1px solid #dadada;
   text-align: center;
+  text-align: right;
+}
+#pmp-publish-actions .helper-text {
+  float: left;
+  margin: 6px 0;
+  color: #999;
+}
+#pmp-publish-actions .button-pmp {
+  background: #CC362B;
+  border-color: #B33026;
+  -webkit-box-shadow: inset 0 1px 0 rgba(192, 100, 100, 1), 0 1px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 1px 0 rgba(192, 100, 100, 1), 0 1px 0 rgba(0, 0, 0, 0.15);
+  color: #fff;
+  text-decoration: none;
+}
+#pmp-publish-actions .button-pmp.hover, #pmp-publish-actions .button-pmp:hover, #pmp-publish-actions .button-pmp.focus, #pmp-publish-actions .button-pmp:focus {
+  background: #B33026;
+  border-color: #863B35;
+  -webkit-box-shadow: inset 0 1px 0 rgba(163, 95, 95, 0.6);
+  box-shadow: inset 0 1px 0 rgba(163, 95, 95, 0.6);
 }
