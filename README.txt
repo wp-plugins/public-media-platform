@@ -3,7 +3,7 @@ Contributors: publicmediaplatform
 Tags: pmp,pubmedia,publicmediaplatform,apm,npr,pri,prx,pbs,media,news
 Requires at least: 3.9
 Tested up to: 4.1.1
-Stable tag: 0.2.3
+Stable tag: 0.2.4
 License: MIT
 License URI: https://github.com/publicmediaplatform/pmp-wordpress/blob/master/LICENSE
 
@@ -20,7 +20,9 @@ Built by the [INN Nerds](http://nerds.inn.org/).
 = Current plugin features: =
 
 * **Search** Find available content via filters and full-text search
+* **Saved Searches** The ability to save a search for later
 * **Pull** Create draft or published Posts from any PMP search result
+* **Automated Pull** Publish PMP content automatically while you're away
 * **Images** Set featured images from PMP content metadata
 * **Audio** Embed audio players when available for PMP content
 * **Push** Send a Post to the PMP for further distribution
@@ -28,8 +30,6 @@ Built by the [INN Nerds](http://nerds.inn.org/).
 
 = In the works: =
 
-* **Saved Searches** The ability to save a search for later
-* **Automated Pull** Publish PMP content automatically while you're away
 * **Video** Embed video players for PMP content
 * **And More** Keep checking [the Github project](https://github.com/publicmediaplatform/pmp-wordpress) for upcoming features and fixes.
 
@@ -53,6 +53,14 @@ For information on the PMP in general, head to [support.pmp.io](https://support.
 See the [documentation on Github](https://github.com/publicmediaplatform/pmp-wordpress).
 
 == Changelog ==
+
+= 0.2.4 =
+
+- Saved searches!
+- Categories for saved searches
+- PMP Content meta box
+- Fix image crops for pushed Posts
+- Prevent pulling duplicate PMP stories
 
 = 0.2.3 =
 
