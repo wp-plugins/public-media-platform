@@ -121,11 +121,10 @@ add_action('transition_post_status',  'pmp_on_post_status_transition', 10, 3 );
 /**
  * Add a "PMP Pushed" date to the meta actions box.
  *
+ * @param $post object the WP_Post object to use for rendering the PMP last modified meta info.
  * @since 0.2
  */
-function pmp_last_modified_meta() {
-	global $post;
-
+function pmp_last_modified_meta($post) {
 	// Only show meta if this post came from the PMP
 	$pmp_guid = get_post_meta($post->ID, 'pmp_guid', true);
 	$pmp_mod = get_post_meta($post->ID, 'pmp_modified', true);
@@ -153,16 +152,14 @@ function pmp_last_modified_meta() {
 	</div>
 <?php
 }
-add_action('post_submitbox_misc_actions', 'pmp_last_modified_meta');
 
 /**
  * Add a "Publish and push to PMP" button the post publish actions meta box.
  *
+ * @param $post object the WP_Post object to use for rendering the PMP 'Push to PMP' button.
  * @since 0.2
  */
-function pmp_publish_and_push_to_pmp_button() {
-	global $post;
-
+function pmp_publish_and_push_to_pmp_button($post) {
 	// Check if post is in the PMP, and if it's mine
 	$pmp_guid = get_post_meta($post->ID, 'pmp_guid', true);
 	$pmp_mine = pmp_post_is_mine($post->ID);
@@ -182,13 +179,16 @@ function pmp_publish_and_push_to_pmp_button() {
 ?>
 	<div id="pmp-publish-actions">
 		<p class="helper-text"><?php echo $helper_text; ?></p>
-		<input type="submit" name="pmp_update_push" id="pmp-update-push"
-			<?php if ($is_disabled) echo 'disabled'; ?>
-			class="button button-pmp button-large" value="Push to PMP">
+<?php
+	$attrs = array('id' => 'pmp-update-push');
+	if ($is_disabled)
+		$attrs['disabled'] = 'disabled';
+
+	submit_button('Push to PMP', 'large', 'pmp_update_push', false, $attrs);
+?>
 	</div>
 <?php
 }
-add_action('post_submitbox_start', 'pmp_publish_and_push_to_pmp_button');
 
 /**
  * Push content to PMP when user clicks "Push to PMP"
@@ -236,7 +236,7 @@ function pmp_handle_push($post_id) {
 		));
 	}
 
-	// Set default collections (series & property), permissions group
+	// Set default collections (series & property), permissions group or the appropriate override
 	$obj->links = new \StdClass();
 
 	// Set the alternate link
@@ -251,19 +251,22 @@ function pmp_handle_push($post_id) {
 	if ($post->post_type == 'post') {
 		$obj->links->collection = array();
 
-		$default_series = get_option('pmp_default_series', false);
-		if (!empty($default_series))
-			$obj->links->collection[] = (object) array('href' => $sdk->href4guid($default_series));
+		$series_override = get_post_meta($post_id, 'pmp_series_override', true);
+		$series = (empty($series_override))? get_option('pmp_default_series', false) : $series_override;
+		if (!empty($series))
+			$obj->links->collection[] = (object) array('href' => $sdk->href4guid($series));
 
-		$default_property = get_option('pmp_default_property', false);
-		if (!empty($default_property))
-			$obj->links->collection[] = (object) array('href' => $sdk->href4guid($default_property));
+		$property_override = get_post_meta($post_id, 'pmp_property_override', true);
+		$property = (empty($property_override))? get_option('pmp_default_property', false) : $property_override;
+		if (!empty($property))
+			$obj->links->collection[] = (object) array('href' => $sdk->href4guid($property));
 	}
 
 	// Build out the permissions group profile array
-	$default_group = get_option('pmp_default_group', false);
-	if (!empty($default_group))
-		$obj->links->permission[] = (object) array('href' => $sdk->href4guid($default_group));
+	$group_override = get_post_meta($post_id, 'pmp_group_override', true);
+	$group = (empty($group_override))? get_option('pmp_default_group', false) : $group_override;
+	if (!empty($group))
+		$obj->links->permission[] = (object) array('href' => $sdk->href4guid($group));
 
 	// If this is a post with a featured image, push the featured image as a PMP Doc and include
 	// it as a link in the Doc.
@@ -324,22 +327,21 @@ function pmp_handle_push($post_id) {
  */
 function pmp_enclosures_for_media($media_id) {
 	$allowed_sizes = array(
-		'thumbnail',
-		'small',
-		'medium',
-		'large',
-		'original'
+		'thumbnail' => 'square',
+		'small' => 'small',
+		'medium' => 'medium',
+		'large' => 'large'
 	);
 
 	$media_metadata = wp_get_attachment_metadata($media_id);
 	$enclosures = array();
 	foreach ($media_metadata['sizes'] as $name => $meta) {
-		if (in_array($name, $allowed_sizes)) {
+		if (in_array($name, array_keys($allowed_sizes))) {
 			$src = wp_get_attachment_image_src($media_id, $name);
 			$enclosures[] = (object) array(
 				'href' => $src[0],
 				'meta' => (object) array(
-					'crop' => $name,
+					'crop' => $allowed_sizes[$name],
 					'height' => $meta['height'],
 					'width' => $meta['width']
 				),
@@ -351,7 +353,7 @@ function pmp_enclosures_for_media($media_id) {
 	$enclosures[] = (object) array(
 		'href' => wp_get_attachment_url($media_id),
 		'meta' => (object) array(
-			'crop' => 'original',
+			'crop' => 'primary',
 			'height' => $media_metadata['height'],
 			'width' => $media_metadata['width'],
 		),
@@ -468,6 +470,86 @@ function pmp_get_my_guid() {
  */
 function pmp_update_my_guid_transient() {
 	pmp_get_my_guid();
+}
+
+/**
+ * Retrieve saved search queries
+ *
+ * @since 0.3
+ */
+function pmp_get_saved_search_queries() {
+	$search_queries = get_option('pmp_saved_search_queries');
+
+	if (empty($search_queries))
+		return array();
+
+	return $search_queries;
+}
+
+/**
+ * Save a search query for later use
+ *
+ * @param $query_data (array) Should have two keys: `options` and `query`.
+ *
+ * `options` should include `title` and `query_auto_create`.
+ * `query` should describe the query parameters as pertains to the search form on the search page itself.
+ *
+ * @return (mixed) $search_id if the query was saved successsfully, false if it was not.
+ * @since 0.3
+ */
+function pmp_save_search_query($search_id=false, $query_data) {
+	$search_queries = get_option('pmp_saved_search_queries', array());
+
+	if (!empty($search_id))
+		$search_queries[$search_id] = $query_data;
+	else
+		$search_queries[] = $query_data;
+
+	$ret = update_option('pmp_saved_search_queries', $search_queries);
+
+	if (empty($ret)) {
+		return $search_id;
+	} else {
+		if (!empty($search_id))
+			return $search_id;
+		else {
+			end($search_queries);
+			return key($search_queries);
+		}
+	}
+}
+
+/**
+ * Get details about a saved search
+ *
+ * @param $search_id (string) the id of the saved search query to fetch.
+ * @return (mixed) the saved search query if it exists or false.
+ * @since 0.3
+ */
+function pmp_get_saved_search_query($search_id) {
+	$search_queries = pmp_get_saved_search_queries();
+
+	if (!empty($search_queries[$search_id]))
+		return $search_queries[$search_id];
+	else
+		return false;
+}
+
+/**
+ * Delete a saved search query by id
+ *
+ * @since 0.3
+ */
+function pmp_delete_saved_query_by_id($search_id) {
+	$search_queries = pmp_get_saved_search_queries();
+
+	if (!isset($search_queries[$search_id]))
+		return false;
+
+	delete_option('pmp_last_saved_search_cron_' . sanitize_title($search_queries[$search_id]->options->title));
+
+	unset($search_queries[$search_id]);
+	return update_option('pmp_saved_search_queries', $search_queries);
 }
 
 if (!function_exists('var_log')) {

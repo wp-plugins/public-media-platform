@@ -46,7 +46,45 @@ class SDKWrapper {
 			$data = $this->prepQueryData($result);
 		}
 
+		if (isset($args_array[0]) && isset($args_array[0]['limit']))
+			$limit = $args_array[0]['limit'];
+
+		$data['items'] = $this->populateEditLinks($data['items']);
+
 		return $data;
+	}
+
+	/**
+	 * For each $item in the $items array, check for an existing WP post with the same PMP GUID and
+	 * add a `_wp_edit_link` attribute to the $item if one exists.
+	 *
+	 * @since 0.3
+	 */
+	public function populateEditLinks($items) {
+		$post_ids_and_guids = $this->getPmpPostIdsAndGuids();
+
+		$populated = $items;
+		foreach ($items as $idx => $item) {
+			foreach ($post_ids_and_guids as $result) {
+				if ($item['attributes']['guid'] == $result['meta_value']) {
+					$populated[$idx]['attributes']['_wp_edit_link'] = get_edit_post_link($result['post_id']);
+					break;
+				}
+			}
+		}
+
+		return $populated;
+	}
+
+	/**
+	 * Get the `post_id` and `pmp_guid` for all existing posts that originate from the PMP
+	 *
+	 * @since 0.3
+	 */
+	public function getPmpPostIdsAndGuids() {
+		global $wpdb;
+		return $wpdb->get_results(
+			"select post_id, meta_value from {$wpdb->postmeta} where meta_key = 'pmp_guid'", ARRAY_A);
 	}
 
 	/**
@@ -155,7 +193,6 @@ class SDKWrapper {
 			explode(',', $string)
 		);
 	}
-
 
 	/**
 	 * Get the first image link for a Doc

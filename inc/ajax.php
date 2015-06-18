@@ -210,6 +210,78 @@ function pmp_default_collection() {
 }
 add_action('wp_ajax_pmp_default_collection', 'pmp_default_collection');
 
+/**
+ * Ajax function to save a search query for later use
+ *
+ * @since 0.3
+ */
+function pmp_save_query() {
+	check_ajax_referer('pmp_ajax_nonce', 'security');
+
+	$search_query = json_decode(stripslashes($_POST['data']));
+
+	if (isset($search_query->options->search_id)) {
+		$search_id = $search_query->options->search_id;
+		unset($search_query->options->search_id);
+	} else
+		$search_id = null;
+
+	$search_id = pmp_save_search_query($search_id, $search_query);
+
+	if ($search_id >= 0) {
+		print json_encode(array(
+			"success" => true,
+			"search_id" => $search_id
+		));
+	} else
+		print json_encode(array("success" => false));
+
+	wp_die();
+}
+add_action('wp_ajax_pmp_save_query', 'pmp_save_query');
+
+/**
+ * Ajax function to delete a saved search query
+ *
+ * @since 0.3
+ */
+function pmp_delete_saved_query() {
+	check_ajax_referer('pmp_ajax_nonce', 'security');
+
+	$data = json_decode(stripslashes($_POST['data']), true);
+
+	$ret = pmp_delete_saved_query_by_id($data['search_id']);
+
+	if ($ret >= 0)
+		print json_encode(array("success" => true));
+	else
+		print json_encode(array("success" => false));
+
+	wp_die();
+}
+add_action('wp_ajax_pmp_delete_saved_query', 'pmp_delete_saved_query');
+
+/**
+ * Ajax function returns data structure describing select menu for Group, Series, Propert for
+ * a post
+ *
+ * @since 0.3
+ */
+function pmp_get_select_options() {
+	check_ajax_referer('pmp_ajax_nonce', 'security');
+
+	$data = json_decode(stripslashes($_POST['data']), true);
+
+	$post = get_post($data['post_id']);
+	$type = $data['type'];
+
+	$ret = _pmp_select_for_post($post, $type);
+	print json_encode(array_merge(array("success" => true), $ret));
+
+	wp_die();
+}
+add_action('wp_ajax_pmp_get_select_options', 'pmp_get_select_options');
+
 /* Helper functions */
 function _pmp_create_doc($type, $data) {
 	$sdk = new SDKWrapper();
@@ -237,16 +309,19 @@ function _pmp_modify_doc($data) {
 }
 
 function _pmp_ajax_create_post($draft=false) {
+	if (!current_user_can('edit_posts'))
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+
 	print json_encode(_pmp_create_post($draft));
 	wp_die();
 }
 
-function _pmp_create_post($draft=false) {
-	if (!current_user_can('edit_posts'))
-		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
-
+function _pmp_create_post($draft=false, $doc=null) {
 	$sdk = new SDKWrapper();
-	$data = $sdk->newDoc('story', json_decode(stripslashes($_POST['post_data'])));
+	if (empty($doc))
+		$data = $sdk->newDoc('story', json_decode(stripslashes($_POST['post_data'])));
+	else
+		$data = $doc;
 
 	$post_data = array_merge(pmp_get_post_data_from_pmp_doc($data), array(
 		'post_author' => get_current_user_id(),
@@ -355,7 +430,56 @@ function _pmp_create_post($draft=false) {
 	return array(
 		"success" => true,
 		"data" => array(
-			"edit_url" => html_entity_decode(get_edit_post_link($new_post))
+			"edit_url" => html_entity_decode(get_edit_post_link($new_post)),
+			"post_id" => $new_post
 		)
 	);
+}
+
+/**
+ * Builds a data structure that describes a select menu for the post based on the $type
+ *
+ * @param $type (string) The document option to create a select menu for
+ * (i.e., 'group', 'property' or 'series').
+ * @since 0.3
+ */
+function _pmp_select_for_post($post, $type) {
+	$ret = array(
+		'default_guid' => get_option('pmp_default_' . $type, false),
+		'type' => $type
+	);
+
+	$sdk = new SDKWrapper();
+	$pmp_things = $sdk->query2json('queryDocs', array(
+		'profile' => $type,
+		'writeable' => 'true',
+		'limit' => 9999
+	));
+
+	$override = get_post_meta($post->ID, $meta_key = 'pmp_' . $type . '_override', true);
+	$options = array();
+
+	// Pad the options with an empty value
+	$options[] = array(
+		'selected' => '',
+		'guid' => '',
+		'title' => '--- No ' . $type . ' ---'
+	);
+
+	foreach ($pmp_things['items'] as $thing) {
+		if (!empty($override))
+			$selected = selected($override, $thing['attributes']['guid'], false);
+		else
+			$selected = selected($ret['default_guid'], $thing['attributes']['guid'], false);
+
+		$option = array(
+			'selected' => $selected,
+			'guid' => $thing['attributes']['guid'],
+			'title' => $thing['attributes']['title']
+		);
+		$options[] = $option;
+	}
+
+	$ret['options'] = $options;
+	return $ret;
 }

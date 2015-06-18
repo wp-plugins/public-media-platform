@@ -57,6 +57,8 @@ function pmp_get_updates() {
 				if (!empty($doc)) {
 					if (pmp_needs_update($post, $doc))
 						pmp_update_post($post, $doc);
+				} else {
+					wp_delete_post($post->ID, true);
 				}
 			}
 		}
@@ -96,4 +98,68 @@ function pmp_update_post($wp_post, $pmp_doc) {
 		update_post_meta($the_post, $key, $value);
 
 	return $the_post;
+}
+
+/**
+ * For each saved search query, query the PMP and perform the appropriate action (e.g., auto draft, auto publish or do nothing)
+ *
+ * @since 0.3
+ */
+function pmp_import_for_saved_queries() {
+	$search_queries = pmp_get_saved_search_queries();
+	$sdk = new SDKWrapper();
+
+	foreach ($search_queries as $id => $query_data) {
+		if ($query_data->options->query_auto_create == 'off')
+			continue;
+
+		$default_opts = array(
+			'profile' => 'story',
+			'limit' => 25
+		);
+
+		$last_saved_search_cron = get_option('pmp_last_saved_search_cron_' . sanitize_title($query_data->options->title), false);
+		if (!empty($last_saved_search_cron))
+			$default_opts['startdate'] = $last_saved_search_cron;
+		else {
+			// First time pulling, honor the initial pull limit
+			if (!empty($query_data->options->initial_pull_limit))
+				$default_opts['limit'] = $query_data->options->initial_pull_limit;
+		}
+
+		$query_args = array_merge($default_opts, (array) $query_data->query);
+		$result = $sdk->queryDocs($query_args);
+		if (empty($result))
+			continue;
+
+		foreach ($result->items() as $item) {
+			$meta_args = array(
+				array(
+					'key' => 'pmp_guid',
+					'value' => $item->attributes->guid
+				)
+			);
+
+			$query = new WP_Query(array(
+				'meta_query' => $meta_args,
+				'posts_per_page' => 1,
+				'post_status' => 'any'
+			));
+
+			if (!$query->have_posts()) {
+				if ($query_data->options->query_auto_create == 'draft')
+					$result = _pmp_create_post(true, $item);
+				else if ($query_data->options->query_auto_create == 'publish')
+					$result = _pmp_create_post(false, $item);
+
+				$post_id = $result['data']['post_id'];
+			} else
+				$post_id = $query->posts[0]->ID;
+
+			if (isset($query_data->options->post_category))
+				wp_set_post_categories($post_id, $query_data->options->post_category, true);
+		}
+
+		update_option('pmp_last_saved_search_cron_' . sanitize_title($query_data->options->title), date('c', time()));
+	}
 }

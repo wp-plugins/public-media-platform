@@ -21,11 +21,35 @@ function pmp_search_page() {
 	if (!current_user_can('edit_posts'))
 		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 
-	pmp_render_template('search.php', array(
-		'PMP' => pmp_json_obj(),
+	$context = array(
 		'creators' => pmp_get_creators(),
 		'profiles' => pmp_get_profiles()
-	));
+	);
+
+	if (isset($_GET['search_id'])) {
+		$query_data = pmp_get_saved_search_query($_GET['search_id']);
+		$context['PMP'] = pmp_json_obj(array('search' => $query_data));
+	} else
+		$context['PMP'] = pmp_json_obj();
+
+	pmp_render_template('search.php', $context);
+}
+
+/**
+ * Render the "Manage saved searches" page
+ *
+ * @since 0.3
+ */
+function pmp_manage_saved_searches_page() {
+	if (!current_user_can('edit_posts'))
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+
+	$context = array(
+		'PMP' => pmp_json_obj(),
+		'searches' => pmp_get_saved_search_queries()
+	);
+
+	pmp_render_template('saved_searches.php', $context);
 }
 
 /**

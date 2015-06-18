@@ -93,6 +93,13 @@ function pmp_plugin_menu() {
 			'capability' => 'manage_options',
 			'menu_slug' => 'pmp-properties-menu',
 			'function' => 'pmp_collections_page'
+		),
+		array(
+			'page_title' => 'Manage saved searches',
+			'menu_title' => 'Manage saved searches',
+			'capability' => 'manage_options',
+			'menu_slug' => 'pmp-manage-saved-searches',
+			'function' => 'pmp_manage_saved_searches_page'
 		)
 	);
 
@@ -118,16 +125,12 @@ function pmp_add_meta_boxes() {
 	if ($screen->id == 'post') {
 		global $post;
 
-		$pmp_guid = get_post_meta($post->ID, 'pmp_guid', true);
-
-		if (!empty($pmp_guid) && !pmp_post_is_mine($post->ID)) {
-			add_meta_box(
-				'pmp_subscribe_to_updates',
-				'PMP: Subscribe to updates',
-				'pmp_subscribe_to_updates_meta_box',
-				'post', 'side'
-			);
-		}
+		add_meta_box(
+			'pmp_document_meta',
+			'PMP: Document information',
+			'pmp_mega_meta_box',
+			'post', 'side'
+		);
 	}
 }
 add_action('add_meta_boxes', 'pmp_add_meta_boxes');
@@ -149,5 +152,6 @@ register_activation_hook(__FILE__, 'pmp_setup_cron_on_activation');
  */
 function pmp_hourly_cron() {
 	pmp_get_updates();
+	pmp_import_for_saved_queries();
 }
 add_action('pmp_hourly_cron', 'pmp_hourly_cron');

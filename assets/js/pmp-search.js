@@ -1,3 +1,5 @@
+var PMP = PMP || {};
+
 (function() {
     var $ = jQuery,
         Doc = PMP.Doc,
@@ -5,22 +7,68 @@
         BaseView = PMP.BaseView,
         Modal = PMP.Modal;
 
+    PMP.instances = PMP.instances || {};
+
     // Views
     var SearchForm = BaseView.extend({
         el: '#pmp-search-form',
 
         events: {
             "submit": "submit",
+            "click #pmp-save-query": "saveQuery",
             "click #pmp-show-advanced a": "advanced",
             "change input": "change",
             "change select": "change"
         },
 
-        initialize: function() {
+        initialize: function(options) {
             this.docs = new DocCollection();
             this.results = new ResultsList({ collection: this.docs });
-            this.docs.on('reset', this.hideSpinner.bind(this));
-            this.docs.on('error', this.hideSpinner.bind(this));
+            this.docs.on('reset', this.onReset.bind(this));
+            this.docs.on('error', this.onError.bind(this));
+
+            if (options && typeof options.search !== 'undefined')
+                this.initSavedSearch(options);
+        },
+
+        initSavedSearch: function(options) {
+            this.saveQueryModal = new SaveQueryModal({
+                search: options.search,
+                searchForm: this,
+            });
+            this.fill(options.search.query);
+            this.advanced();
+            this.submit();
+        },
+
+        fill: function(query) {
+            var self = this;
+
+            _.each(query, function(value, name) {
+                var el = self.$el.find('[name="' + name + '"]');
+                el.val(value);
+            });
+        },
+
+        onReset: function(result) {
+            this.$el.find('#pmp-save-query').removeAttr('disabled');
+            this.hideSpinner();
+        },
+
+        onError: function(result) {
+            this.hideSpinner();
+            this.$el.find('#pmp-save-query').attr('disabled', 'disabled');
+        },
+
+        saveQuery: function() {
+            if (typeof this.saveQueryModal == 'undefined') {
+                this.saveQueryModal = new SaveQueryModal({
+                    searchForm: this
+                });
+            }
+
+            this.saveQueryModal.render();
+            return false;
         },
 
         submit: function() {
@@ -33,13 +81,14 @@
             });
 
             this.showSpinner();
+            this.last_query = query;
             this.docs.search(query);
 
             return false;
         },
 
-        advanced: function(e) {
-            var target = $(e.currentTarget);
+        advanced: function() {
+            var target = $('#pmp-show-advanced a');
             target.remove();
             this.$el.find('#pmp-advanced-search').show();
             return false;
@@ -66,10 +115,8 @@
 
         initialize: function(options) {
             this.collection = (typeof options.collection != 'undefined')? options.collection : new DocCollection();
-
             this.collection.attributes.on('change', this.renderPagingation.bind(this));
-            this.collection.on('reset', this.render.bind(this));
-
+            this.collection.attributes.on('change', this.render.bind(this));
             this.collection.on('error', this.renderError.bind(this));
         },
 
@@ -88,7 +135,8 @@
             this.$el.find('p.error').remove();
             this.$el.find('.pmp-search-result').remove();
 
-            var template = _.template($('#pmp-search-result-tmpl').html());
+            var template = _.template($('#pmp-search-result-tmpl').html()),
+                existing = this.collection.attributes.get('existing');
 
             this.collection.each(function(model, idx) {
                 var image = (model.getBestThumbnail())? model.getBestThumbnail().href : null;
@@ -111,7 +159,7 @@
 
                 new ResultActions({
                     el: res.find('.pmp-result-actions'),
-                    model: model
+                    model: model,
                 });
 
                 self.$el.append(res);
@@ -218,7 +266,7 @@
         draft: function() {
             var self = this,
                 args = {
-                    content: 'Are you sure you want to create a draft of this story?',
+                    content: '<p>Are you sure you want to create a draft of this story?</p>',
                     actions: {
                         'Yes': function() {
                             self.modal.showSpinner();
@@ -237,7 +285,7 @@
         publish: function() {
             var self = this,
                 args = {
-                    content: 'Are you sure you want to publish this story?',
+                    content: '<p>Are you sure you want to publish this story?</p>',
                     actions: {
                         'Yes': function() {
                             self.modal.showSpinner();
@@ -268,7 +316,152 @@
         }
     });
 
+    var SaveQueryModal = PMP.Modal.extend({
+        id: 'pmp-save-query-modal',
+
+        action: 'pmp_save_query',
+
+        actions: {
+            'Save': 'saveQuery',
+            'Cancel': 'close'
+        },
+
+        initialize: function(options)  {
+            this.searchForm = options.searchForm;
+            this.options = options;
+
+            this.template = _.template($('#pmp-save-query-tmpl').html());
+            if (this.options && typeof this.options.search !== 'undefined')
+                this.content = this.template({ search_id: PMP.utils.getQueryParam('search_id') });
+            else
+                this.content = this.template({});
+
+            PMP.Modal.prototype.initialize.apply(this, arguments);
+        },
+
+        content: _.template($('#pmp-save-query-tmpl').html(), {}),
+
+        render: function() {
+            PMP.Modal.prototype.render.apply(this, arguments);
+            if (typeof this.options.search !== 'undefined')
+                this.fill(this.options.search.options);
+        },
+
+        fill: function(options) {
+            var self = this;
+
+            _.each(options, function(value, name) {
+                var el = self.$el.find('[name="' + name + '"]');
+                if (el.attr('type') == 'radio') {
+                    el.each(function() {
+                        if ($(this).val() == value) {
+                            $(this).attr('checked', 'checked');
+                            return false;
+                        }
+                    });
+                } else
+                    el.val(value);
+            });
+        },
+
+        validate: function() {
+            var inputs = this.$el.find('form input'),
+                valid = true;
+
+            _.each(inputs, function(v, i) {
+                if ($(v).attr('name') == 'initial_pull_limit') {
+                    var num = Number($(v).val());
+                    if (isNaN(num)) {
+                        alert('Initial pull limit must be a number.');
+                        valid = false;
+                    }
+                    if (num > 100 || num < 1) {
+                        alert('Initial pull limit must be between 1 and 100.');
+                        valid = false;
+                    }
+                }
+
+                if (!v.validity.valid) {
+                    if ($(v).attr('name') == 'title')
+                        alert('Please specify a title before saving.');
+                    else
+                        alert('Please specify all required fields before saving.');
+
+                    valid = false;
+                }
+            });
+
+            return valid;
+        },
+
+        saveQuery: function() {
+            if (typeof this.ongoing !== 'undefined' && $.inArray(this.ongoing.state(), ['resolved', 'rejected']) == -1)
+                return false;
+
+            var valid = this.validate();
+            if (!valid)
+                return false;
+
+            var serialized = this.$el.find('form').serializeArray();
+
+            var formData = {};
+            _.each(serialized, function(val, idx) {
+                if (val.value !== '') {
+                    if (val.name.match(/\[\]$/)) {
+                        if (!formData[val.name.replace('[]', '')])
+                            formData[val.name.replace('[]', '')] = [];
+
+                        formData[val.name.replace('[]', '')].push(val.value);
+                    } else
+                        formData[val.name] = val.value;
+                }
+            });
+
+            var self = this,
+                data = {
+                    action: this.action,
+                    security: PMP.ajax_nonce,
+                    data: JSON.stringify({
+                        options: formData,
+                        query: this.searchForm.last_query
+                    })
+                };
+
+            var opts = {
+                url: ajaxurl,
+                dataType: 'json',
+                data: data,
+                method: 'post',
+                success: function(data) {
+
+                    self.hideSpinner();
+                    self.close();
+
+                    var params = PMP.utils.getQueryParams();
+
+                    if (params.search_id == data.search_id)
+                        window.location.reload(true);
+                    else {
+                        params.search_id = data.search_id;
+                        window.location.search = '?' + PMP.utils.serialize(params);
+                    }
+                },
+                error: function() {
+                    self.hideSpinner();
+                    alert('Something went wrong. Please try again.');
+                }
+            };
+
+            this.showSpinner();
+            this.ongoing = $.ajax(opts);
+            return this.ongoing;
+        }
+    });
+
     $(document).ready(function() {
-        window.sf = new SearchForm();
+        if (typeof PMP.search !== 'undefined')
+            PMP.instances.search_form = new SearchForm({ search: PMP.search });
+        else
+            PMP.instances.search_form = new SearchForm();
     });
 })();
