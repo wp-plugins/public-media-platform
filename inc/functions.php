@@ -57,6 +57,9 @@ function pmp_get_profiles() {
  */
 function pmp_media_sideload_image($file, $post_id, $desc=null) {
 	if (!empty($file)) {
+		include_once ABSPATH . 'wp-admin/includes/file.php';
+		include_once ABSPATH . 'wp-admin/includes/media.php';
+
 		// Set variables for storage, fix file filename for query strings.
 		preg_match('/[^\?]+\.(jpe?g|jpe|gif|png)\b/i', $file, $matches);
 		$file_array = array();
@@ -251,20 +254,18 @@ function pmp_handle_push($post_id) {
 	if ($post->post_type == 'post') {
 		$obj->links->collection = array();
 
-		$series_override = get_post_meta($post_id, 'pmp_series_override', true);
-		$series = (empty($series_override))? get_option('pmp_default_series', false) : $series_override;
+		$series = pmp_get_collection_override_value($post_id, 'series');
 		if (!empty($series))
 			$obj->links->collection[] = (object) array('href' => $sdk->href4guid($series));
 
-		$property_override = get_post_meta($post_id, 'pmp_property_override', true);
-		$property = (empty($property_override))? get_option('pmp_default_property', false) : $property_override;
+		$property = pmp_get_collection_override_value($post_id, 'property');
 		if (!empty($property))
 			$obj->links->collection[] = (object) array('href' => $sdk->href4guid($property));
 	}
 
 	// Build out the permissions group profile array
-	$group_override = get_post_meta($post_id, 'pmp_group_override', true);
-	$group = (empty($group_override))? get_option('pmp_default_group', false) : $group_override;
+	$obj->links->permission = array();
+	$group = pmp_get_collection_override_value($post_id, 'group');
 	if (!empty($group))
 		$obj->links->permission[] = (object) array('href' => $sdk->href4guid($group));
 
@@ -500,7 +501,7 @@ function pmp_get_saved_search_queries() {
 function pmp_save_search_query($search_id=false, $query_data) {
 	$search_queries = get_option('pmp_saved_search_queries', array());
 
-	if (!empty($search_id))
+	if (is_numeric($search_id))
 		$search_queries[$search_id] = $query_data;
 	else
 		$search_queries[] = $query_data;
@@ -550,6 +551,29 @@ function pmp_delete_saved_query_by_id($search_id) {
 
 	unset($search_queries[$search_id]);
 	return update_option('pmp_saved_search_queries', $search_queries);
+}
+
+/**
+ * Get the override value for property, series, group for a post
+ *
+ * @param $post (integer|object) the post id or post object to check for override values.
+ * @param $type (string) the collection type override to check for (e.g., property, series or group)
+ * @since 0.3
+ */
+function pmp_get_collection_override_value($post, $type) {
+	$post = get_post($post);
+	$pmp_guid = get_post_meta($post->ID, 'pmp_guid', true);
+	$override = get_post_meta($post->ID, 'pmp_' . $type . '_override', true);
+
+	if (empty($override)) {
+		if (empty($pmp_guid))
+			$value = get_option('pmp_default_' . $type, false);
+		else
+			$value = false;
+	} else
+		$value = $override;
+
+	return $value;
 }
 
 if (!function_exists('var_log')) {

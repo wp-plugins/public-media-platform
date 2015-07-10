@@ -456,28 +456,28 @@ function _pmp_select_for_post($post, $type) {
 		'limit' => 9999
 	));
 
-	$override = get_post_meta($post->ID, $meta_key = 'pmp_' . $type . '_override', true);
+	$override = pmp_get_collection_override_value($post, $type);
 	$options = array();
 
 	// Pad the options with an empty value
 	$options[] = array(
-		'selected' => '',
+		'selected' => selected($override, false, false),
 		'guid' => '',
 		'title' => '--- No ' . $type . ' ---'
 	);
 
-	foreach ($pmp_things['items'] as $thing) {
-		if (!empty($override))
-			$selected = selected($override, $thing['attributes']['guid'], false);
-		else
-			$selected = selected($ret['default_guid'], $thing['attributes']['guid'], false);
+	if (!empty($pmp_things['items'])) {
+		foreach ($pmp_things['items'] as $thing) {
+			if (!empty($override))
+				$selected = selected($override, $thing['attributes']['guid'], false);
 
-		$option = array(
-			'selected' => $selected,
-			'guid' => $thing['attributes']['guid'],
-			'title' => $thing['attributes']['title']
-		);
-		$options[] = $option;
+			$option = array(
+				'selected' => (isset($selected))? $selected : '',
+				'guid' => $thing['attributes']['guid'],
+				'title' => $thing['attributes']['title']
+			);
+			$options[] = $option;
+		}
 	}
 
 	$ret['options'] = $options;

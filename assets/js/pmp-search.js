@@ -370,6 +370,9 @@ var PMP = PMP || {};
 
             _.each(inputs, function(v, i) {
                 if ($(v).attr('name') == 'initial_pull_limit') {
+                    if ($(v).val().trim() == '')
+                        return;
+
                     var num = Number($(v).val());
                     if (isNaN(num)) {
                         alert('Initial pull limit must be a number.');

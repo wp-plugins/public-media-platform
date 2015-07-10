@@ -429,7 +429,7 @@ p.error {
 #pmp_document_meta .inside { padding: 4px; }
 
 #pmp-override-defaults {
-  padding: 4px 4px 8px 4px;
+  padding: 8px 8px 16px 8px;
   border-bottom: 1px solid #ccc;
   margin-bottom: 14px;
 }

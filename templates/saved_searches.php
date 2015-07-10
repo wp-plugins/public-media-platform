@@ -15,12 +15,12 @@
 				<?php if (!empty($search->options->query_auto_create)) {
 					if ($search->options->query_auto_create == 'draft') { ?>
 						<p><strong>Draft</strong> posts will be automatically created from results for this query.</p>
-					<?php } else { ?>
+					<?php } else if ($search->options->query_auto_create == 'publish') { ?>
 						<p>Posts will be automatically <strong>published</strong> from results for this query.</p>
+					<?php } else if ($search->options->query_auto_create == 'off') { ?>
+						<p><strong>Do nothing</strong> with results for this query.</p>
 					<?php }
-				} else { ?>
-					<p><strong>Do nothing</strong> with results for this query.</p>
-				<?php } ?>
+				} ?>
 				</div>
 				<div class="pmp-saved-search-actions">
 					<a href="<?php echo admin_url('admin.php?page=pmp-search&search_id=' . $id); ?>">View and edit this search query</a> |

@@ -10,11 +10,11 @@ function pmp_mega_meta_box($post) {
 
 	$pmp_guid = get_post_meta($post->ID, 'pmp_guid', true);
 
+	pmp_last_modified_meta($post);
+
 	if (!empty($pmp_guid) && !pmp_post_is_mine($post->ID)) {
 		pmp_subscribe_to_updates_markup($post);
 	} else {
-		pmp_last_modified_meta($post);
-
 		/*
 		 * Container elements for async select menus for Groups, Series and Property for the post
 		 */
@@ -98,12 +98,9 @@ function pmp_save_override_defaults($post_id) {
 		if (isset($_POST[$meta_key])) {
 			$override_guid = $_POST[$meta_key];
 
-			// If we're setting the override to the default, or the override is set to
-			// nothing, just delete the override meta and continue
-			if ($override_guid == $default_guid || empty($override_guid)) {
-				delete_post_meta($post_id, $meta_key);
-				continue;
-			}
+			// Indicate that the $type was explicitly net to false
+			if (empty($override_guid))
+				$override_guid = false;
 
 			// Otherwise, set the override meta
 			update_post_meta($post_id, $meta_key, $override_guid);
