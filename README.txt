@@ -2,8 +2,8 @@
 Contributors: publicmediaplatform
 Tags: pmp,pubmedia,publicmediaplatform,apm,npr,pri,prx,pbs,media,news
 Requires at least: 3.9
-Tested up to: 4.1.1
-Stable tag: 0.2.4
+Tested up to: 4.2.2
+Stable tag: 0.2.5
 License: MIT
 License URI: https://github.com/publicmediaplatform/pmp-wordpress/blob/master/LICENSE
 
@@ -53,6 +53,13 @@ For information on the PMP in general, head to [support.pmp.io](https://support.
 See the [documentation on Github](https://github.com/publicmediaplatform/pmp-wordpress).
 
 == Changelog ==
+
+= 0.2.5 =
+
+- Fixes for saved search labeling and duplication
+- Non-uncategorized saved searches
+- Ability to unset group/series/property on a Post
+- More mega-box
 
 = 0.2.4 =
 
