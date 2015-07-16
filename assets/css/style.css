@@ -1,0 +1,449 @@
+.pmp-hint {
+  font-style: italic;
+  font-size: 12px;
+  color: #777;
+  margin: 4px 0;
+}
+
+/* Basic text search */
+#pmp-search-page #pmp-search-form {
+  float: left;
+  margin: 0;
+  width: 100%;
+}
+#pmp-search-page #pmp-search-form input[type="text"],
+#pmp-search-page #pmp-search-form select {
+  font-size: 16px;
+}
+#pmp-save-query-modal-inner input[type="text"],
+#pmp-search-page #pmp-search-form input[type="text"] {
+  width: 250px;
+}
+#pmp-save-query-modal .pmp-modal-content {
+  text-align: left;
+}
+#pmp-save-query-modal-inner h3 {
+  margin-top: 0;
+}
+#pmp-save-query-modal-inner .form-group {
+  margin: 10px 0;
+}
+#pmp-save-query-modal-inner .form-group.disabled {
+  color: #aaa;
+}
+#pmp-save-query-modal-inner label {
+  display: block;
+  margin: 0 0 8px 0;
+}
+#pmp-save-query-modal .pmp-category-checklist {
+  max-height: 125px;
+  border: 1px solid #ccc;
+  overflow-y: scroll;
+}
+#pmp-save-query-modal .pmp-category-checklist ul {
+  margin: 10px 0;
+}
+#pmp-save-query-modal .pmp-category-checklist ul li {
+  list-style-type: none;
+  margin-left: 10px;
+}
+
+#pmp-search-page p.submit input {
+  margin-right: 10px;
+}
+
+p.submit {
+  clear: both;
+  float: left;
+  margin: 10px 0;
+  padding: 0;
+}
+
+p.submit input {
+  float: left;
+}
+
+.pmp-modal-actions .spinner,
+#pmp-search-page .spinner,
+#pmp-groups-container .spinner,
+#pmp-collection-container .spinner {
+  float: none;
+  position: relative;
+}
+.pmp-modal-actions .spinner,
+#pmp-search-page .spinner {
+  top: 2px;
+}
+#pmp-groups-container .spinner,
+#pmp-collection-container .spinner {
+  top: 12px;
+}
+
+/* Advanced search */
+#pmp-show-advanced {
+  display: block;
+  margin: 10px 0;
+}
+
+#pmp-advanced-search {
+  float: left;
+  display: none;
+  border-radius: 2px;
+  background: #ddd;
+  padding: 10px;
+}
+
+#pmp-advanced-search .left {
+  border-right: 1px solid #aaa;
+  margin-right: 20px;
+}
+
+#pmp-advanced-search .left,
+#pmp-advanced-search .right {
+  float: left;
+  width: 300px;
+}
+
+#pmp-advanced-search input,
+#pmp-advanced-search select,
+#pmp-advanced-search label {
+  display: block;
+  clear: both;
+}
+
+#pmp-advanced-search input,
+#pmp-advanced-search select {
+  margin: 0 0 20px 0;
+}
+
+#pmp-advanced-search label {
+  margin: 0 0 10px 0;
+}
+
+#pmp-content-has-search {
+  border-left: 3px solid #777;
+  margin-left: 10px;
+  padding-left: 10px;
+}
+
+/* Search results */
+#pmp-search-results {
+  max-width: 700px;
+}
+
+.pmp-search-result {
+  width: 100%;
+  float: left;
+  margin: 0 0 20px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.pmp-search-result .pmp-title {
+  margin: 1em 0 0 0;
+}
+
+.pmp-search-result .pmp-byline {
+  font-size: 12px;
+  margin: 6px 0;
+}
+
+.pmp-search-result .pmp-teaser {
+  font-size: 14px;
+  margin: 6px 0;
+}
+
+.pmp-search-result .pmp-image {
+  width: 125px;
+  height: auto;
+  float: left;
+  margin: 0 16px 16px 0;
+}
+
+.pmp-result-exists {
+  display: block;
+  clear: both;
+}
+
+/* Results pagination */
+#pmp-search-results-pagination {
+  clear: both;
+}
+
+/* Results actions */
+.pmp-result-actions {
+  clear: both;
+}
+
+.pmp-result-actions ul li {
+  display: inline;
+}
+
+.pmp-result-actions ul li:after {
+  content: "|";
+  margin: 0 6px;
+  padding: 0;
+}
+
+.pmp-result-actions ul li:last-child:after {
+  content: "";
+}
+
+@media (max-width: 665px) {
+  #pmp-advanced-search .left {
+    border-right: none;
+    margin: 0;
+  }
+}
+
+/* Modal */
+.pmp-modal {
+  position: fixed;
+  width: 500px;
+  min-height: 180px;
+  background: #fafafa;
+  border: 1px solid #ccc;
+  top: 100px;
+  left: 50%;
+  margin-left: -250px;
+  display: none;
+  z-index: 1000;
+  box-shadow: 0 1px 12px #999;
+  border-radius: 4px;
+}
+
+.pmp-modal-header {
+  background: #eee;
+  width: 100%;
+  float: left;
+  border-bottom: 1px solid #ddd;
+}
+.pmp-modal-close {
+  float: right;
+  margin: 10px;
+  color: #555;
+}
+.pmp-modal-close:hover {
+  color: #222;
+  cursor: pointer;
+}
+
+.pmp-modal-content,
+.pmp-modal-actions {
+  padding: 10px;
+  float: left;
+  clear: both;
+  width: 480px;
+}
+.pmp-modal-content {
+  font-size: 16px;
+  text-align: center;
+  margin-bottom: 50px;
+  padding-top: 20px;
+}
+.pmp-modal-actions {
+  bottom: 0;
+  position: absolute;
+  text-align: right;
+  border-top: 1px solid #eee;
+}
+
+#pmp-modal-overlay {
+  top: 0;
+  left: 0;
+  position: fixed;
+  z-index: 999;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  display: none;
+}
+
+body.pmp-modal-open .pmp-modal {
+  display: none;
+}
+body.pmp-modal-open .pmp-modal.show,
+body.pmp-modal-open #pmp-modal-overlay {
+  display: block;
+}
+
+/* Groups & permissions, Series & properties pages */
+p.error {
+  color: #a94442;
+  font-weight: bold;
+}
+#pmp-collection-actions,
+#pmp-collection,
+#pmp-groups-actions,
+#pmp-groups {
+  float: left;
+  clear: both;
+}
+.pmp-collection-actions ul li,
+.pmp-group-actions ul li {
+  display: inline-block;
+  margin-right: 1em;
+}
+.pmp-collection-modal .pmp-modal-content,
+.pmp-group-modal .pmp-modal-content {
+  text-align: left;
+}
+.pmp-collection-modal h2,
+.pmp-group-modal h2 {
+  margin: 0 0 20px 0;
+  line-height: 1.2em;
+}
+.pmp-collection-modal form label,
+.pmp-group-modal form label {
+  margin: 10px 0;
+  display: block;
+}
+.pmp-collection-modal form input,
+.pmp-group-modal form input {
+  width: 100%;
+}
+.pmp-collection-container,
+.pmp-group-container {
+  border-bottom: 1px solid #ccc;
+  float: left;
+  clear: both;
+  min-width: 280px;
+}
+.pmp-collection-default-container,
+.pmp-group-default-container {
+  text-align: center;
+}
+.pmp-collection-default-container p,
+.pmp-group-default-container p {
+  max-width: 320px;
+  margin: 0 auto;
+  font-size: 14px;
+}
+.pmp-default-collection,
+.pmp-default-group {
+  color: green;
+}
+.pmp-label {
+  color: #777;
+  font-size: 12px;
+  margin: 0 0 8px 0;
+}
+#pmp-users-list {
+  margin: 10px 0;
+  border-bottom: 1px solid #eee;
+  border-top: 1px solid #eee;
+  font-size: 16px;
+  max-height: 380px;
+  overflow-y: scroll;
+}
+#pmp-users-list .spinner {
+  float: left;
+  margin: 5px 0 10px 0;
+  display: block;
+}
+#pmp-users-form p {
+  font-size: 16px;
+}
+#pmp-users-form .pmp-user {
+  display: block;
+  padding: 10px 5px;
+}
+#pmp-users-form .pmp-user .remove {
+  float: right;
+  margin-right: 5px;
+  font-size: 14px;
+}
+#pmp-users-form .pmp-user .remove:hover {
+  cursor: pointer;
+}
+#pmp-users-form .pmp-user:nth-child(odd) {
+  background: #efefef;
+}
+
+/* User typeahead search */
+.twitter-typeahead {
+  width: 100%;
+}
+#pmp-add-users input {
+  width: 50%;
+}
+.tt-dropdown-menu {
+  background: #f1f1f1;
+  border: 1px solid #ccc;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  max-height: 300px;
+}
+.tt-suggestion {
+  border-bottom: 1px solid #ddd;
+  margin: 0;
+  padding: 4px 8px;
+}
+.tt-suggestion:hover {
+  cursor: pointer;
+  background: #0b6090;
+  color: white;
+}
+.tt-suggestion:last-child {
+  border: none;
+}
+
+/* Post editor styles */
+#pmp-publish-meta .ext-link {
+  font-size: 18px;
+  text-decoration: none;
+}
+#pmp-publish-meta #timestamp:before {
+  content: '\f325';
+}
+#pmp-publish-actions {
+  margin: 2px 0;
+  padding: 4px;
+  text-align: center;
+  text-align: right;
+}
+#pmp-publish-actions .helper-text {
+  float: left;
+  margin: 6px 0;
+  color: #999;
+}
+#pmp-publish-actions .button-large {
+  background: #CC362B;
+  border-color: #B33026;
+  -webkit-box-shadow: inset 0 1px 0 rgba(192, 100, 100, 1), 0 1px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 1px 0 rgba(192, 100, 100, 1), 0 1px 0 rgba(0, 0, 0, 0.15);
+  color: #fff;
+  text-decoration: none;
+}
+#pmp-publish-actions .button-large.hover,
+#pmp-publish-actions .button-large:hover,
+#pmp-publish-actions .button-large.focus,
+#pmp-publish-actions .button-large:focus {
+  background: #B33026;
+  border-color: #863B35;
+  -webkit-box-shadow: inset 0 1px 0 rgba(163, 95, 95, 0.6);
+  box-shadow: inset 0 1px 0 rgba(163, 95, 95, 0.6);
+}
+
+#pmp-subscribe-to-updates { padding: 0 8px 16px 8px; }
+#pmp_document_meta .inside { padding: 4px; }
+
+#pmp-override-defaults {
+  padding: 8px 8px 16px 8px;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 14px;
+}
+#pmp-override-defaults strong {
+  display: block;
+  margin: 4px 0;
+}
+#pmp-override-defaults select {
+  width: 100%;
+}
+#pmp-override-defaults .pmp-select-for-post {
+  min-height: 56px;
+}
+#pmp-override-defaults .pmp-select-for-post .spinner {
+  background-position: center center;
+  width: 100%;
+}
